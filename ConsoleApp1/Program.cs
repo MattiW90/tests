@@ -59,7 +59,7 @@ internal class Program
         var averageSalaryDeveloper = listOfDevelopers.Average(b => b.BaseSalary);
         var averageSalaryManager = listOfManagers.Average(b => b.BaseSalary);
         var averageSalaryIntern= listOfInterns.Average(b => b.BaseSalary);
-        Console.WriteLine($"Average salary for developers: {averageSalaryDeveloper}, managers: {averageSalaryManager}, interns: {averageSalaryIntern}");
+        Console.WriteLine($"Average salary for developers: {averageSalaryDeveloper:C}, managers: {averageSalaryManager:C}, interns: {averageSalaryIntern:C}");
     }
 }
 
@@ -73,7 +73,7 @@ public abstract class Employee
 
     protected Employee(string name, decimal baseSalary, DateTime hireDate)
     {
-        if(string.IsNullOrEmpty(name)) 
+        if(string.IsNullOrWhiteSpace(name)) 
             throw new ArgumentException("Name cannot be empty or null");
         if (baseSalary < 0)
             throw new ArgumentException("Base salary cannot be negative");
@@ -96,8 +96,8 @@ public abstract class Employee
 
 public class Developer : Employee
 {
-    private const decimal BaseBonusSalary = 0.2m;
-    private const decimal ExperienceBonusSalary = 0.02m;
+    private const decimal BASE_BONUS_SALARY = 0.2m;
+    private const decimal EXPERIENCE_BONUS_SALARY = 0.02m;
     public string ProgrammingLanguage { get; set; } = default!;
     public int YearsOfExperience {  get; set; }
     public Developer(string name, decimal baseSalary, DateTime hireDate, string programmingLanguage, int yearsOfExperience) : base(name, baseSalary, hireDate)
@@ -107,7 +107,7 @@ public class Developer : Employee
     }
     public override decimal CalculateBonus()
     {
-        decimal bonus = BaseBonusSalary * BaseSalary + ExperienceBonusSalary * BaseSalary * YearsOfExperience;
+        decimal bonus = BASE_BONUS_SALARY * BaseSalary + EXPERIENCE_BONUS_SALARY * BaseSalary * YearsOfExperience;
         return bonus;
     }
     public override string GetEmployeeInfo()
@@ -119,8 +119,8 @@ public class Developer : Employee
 }
 public class Manager : Employee
 {
-    private const decimal BaseBonusSalary = 0.3m;
-    private const decimal BaseTeamSalaryBonus = 0.05m;
+    private const decimal BASE_BONUS_SALARY = 0.3m;
+    private const decimal BASE_TEAM_SIZE_SALARY_BONUS = 0.05m;
     public int TeamSize { get; set; }
     public string Department { get; set; }
 
@@ -132,7 +132,7 @@ public class Manager : Employee
 
     public override decimal CalculateBonus()
     {
-        decimal bonus = BaseBonusSalary * BaseSalary + BaseTeamSalaryBonus * BaseSalary* TeamSize;
+        decimal bonus = BASE_BONUS_SALARY * BaseSalary + BASE_TEAM_SIZE_SALARY_BONUS * BaseSalary* TeamSize;
         return bonus;
 
     }
@@ -145,7 +145,7 @@ public class Manager : Employee
 
 public class Intern : Employee
 {
-    private const decimal BaseBonusSalary = 0.05m;
+    private const decimal BASE_BONUS_SALARY = 0.05m;
     public string University { get; set; }
     public DateTime InternshipEndDate { get; set; }
     public Intern(string name, decimal baseSalary, DateTime hireDate, string university, DateTime internshipEndDate) : base(name, baseSalary, hireDate)
@@ -155,7 +155,7 @@ public class Intern : Employee
     }
     public override decimal CalculateBonus()
     {
-        decimal bonus = BaseBonusSalary * BaseSalary;
+        decimal bonus = BASE_BONUS_SALARY * BaseSalary;
         return bonus;
     }
     public override string GetEmployeeInfo()

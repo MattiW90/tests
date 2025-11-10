@@ -1,4 +1,8 @@
-﻿namespace Day15_LinqRealWorld;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
+using System.Threading;
+
+namespace Day15_LinqRealWorld;
 
 internal class Program
 {
@@ -35,13 +39,14 @@ internal class Program
             (p, o) => new
             {
                 p.Name,
-                orderCount = o.Sum(x=>x.Quantity)
-            }).OrderByDescending(x=>x.orderCount)
+                orderTotal = o.Sum(x => x.Quantity),
+                orderCount = o.Count()
+            }).OrderByDescending(x=>x.orderTotal)
             .Take(5);
 
         foreach (var product in top5Products)
         {
-            Console.WriteLine($"ProductName: {product.Name}, count: {product.orderCount}");
+            Console.WriteLine($"ProductName: {product.Name}, total: {product.orderTotal}, count: {product.orderCount}");
         }
 
         Console.WriteLine("\n=== QUERY 3: Monthly Revenue(2024) ===");
@@ -61,7 +66,7 @@ internal class Program
         Console.WriteLine("\n=== QUERY 4: Category Performance ===");
         //Boss: "Która kategoria produktów ma najwyższą średnią wartość zamówienia?"
 
-        var category = products.Join(orderItems, p => p.Id, o => o.Id, (p, o) => new { p.Category, o.OrderId })
+        var category = products.Join(orderItems, p => p.Id, o => o.ProductId, (p, o) => new { p.Category, o.OrderId })
             .Join(orders, oi => oi.OrderId, o => o.Id, (oi, o) => new { oi.Category, o.TotalAmount })
             .GroupBy(x => x.Category)
             .Select(x => new
@@ -84,7 +89,7 @@ internal class Program
             (c, o) => new
             {
                 c.Name,
-                orderTotal = o.Sum(x => x.TotalAmount)
+                orderTotal = o.Count()
             }).Where(x => x.orderTotal > 1);
         foreach(var customer in customersOrdersGreaterThan1)
         {
@@ -94,6 +99,70 @@ internal class Program
         Console.WriteLine("\n=== QUERY 6: Product Revenue Contribution ===");
 
         //Boss: "Pokaż każdy produkt z jego total revenue (Quantity × Price summed)."
+        var productsTotalRevenue = products.Join(orderItems,
+            p => p.Id,
+            o => o.ProductId,
+            (p, o) => new
+            {
+                p.Name,
+                p.Price,
+                o.Quantity,
+                Total = o.Quantity * p.Price
+            }).GroupBy(p => new { p.Name })
+            .Select(g => new
+            {
+                g.Key.Name,
+                TotalRevenue = g.Sum(x => x.Total),
+                TotalQuantity = g.Sum(x=>x.Quantity)
+
+            }).OrderByDescending(x => x.TotalRevenue);
+
+        foreach (var product in productsTotalRevenue)
+        {
+            Console.WriteLine($"Product: {product.Name}, Revenue: {product.TotalRevenue}, TotalQuantity: {product.TotalQuantity}");
+        }
+
+
+        Console.WriteLine("\n=== QUERY 7: City - wise Sales ===");
+
+        //Boss: "Z którego miasta mamy największą sprzedaż?"
+
+        var CustomerQuantity = customers.GroupJoin(orders,
+            c => c.Id,
+            o => o.CustomerId,
+            (c, o) => new
+            {
+                c.City,
+                TotalSum = o.Sum(x => x.TotalAmount)
+                
+            }).GroupBy(c => c.City )
+            .Select(x => new
+            {
+                x.Key,
+                TotalSum = x.Sum(d => d.TotalSum),
+                TotalCustomers = x.Count()
+            }).OrderByDescending(x => x.TotalSum);
+
+        foreach(var city in CustomerQuantity)
+        {
+            Console.WriteLine($"{city.Key}: {city.TotalSum}, {city.TotalCustomers} customers ");
+        }
+
+        Console.WriteLine("\n=== QUERY 8: Average Order Value(AOV) Trend ===");
+
+        //Boss: "Jaka była średnia wartość zamówienia w 2023 vs 2024?"
+
+        var averageValue = orders.GroupBy(o => o.OrderDate.Year)
+            .Select(g => new
+            {
+                g.Key,
+                average = g.Average(a => a.TotalAmount)
+            });
+        foreach (var average in averageValue)
+        {
+            Console.WriteLine($"Year {average.Key}, Order Value: {average.average:C}");
+        }
+
     }
 
     static List<Customer> GetCustomers()
